@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "expo": "~39.0.2",
+    "expo-secure-store": "^9.3.0",
     "expo-status-bar": "~1.0.2",
     "prop-types": "^15.7.2",
     "react": "16.13.1",
@@ -23,6 +24,7 @@
     "react-redux": "5.0.7",
     "redux": "4.0.0",
     "redux-logger": "3.0.6",
+    "redux-persist": "5.9.1",
     "redux-thunk": "2.2.0"
   },
   "devDependencies": {

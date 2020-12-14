@@ -33,6 +33,14 @@ function RenderDish(props) {
 
 
     };
+    const recognizeDrag2 = ({moveX, moveY, dx, dy}) =>{
+        if ( dx > -200 )
+            return true;
+        else
+            return false;
+
+
+    };
 
     const panResponder = PanResponder.create({
         onStartShouldSetPanResponder: (e, gestureState) =>{
@@ -62,6 +70,9 @@ function RenderDish(props) {
                     ],
                     {cancelable: false}
                 )
+            else if(recognizeDrag2(gestureState))
+                    props.onPressComment()
+                    
             return true;
         }
 

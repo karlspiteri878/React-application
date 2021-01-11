@@ -1,19 +1,41 @@
-import React, { Component } from 'react';
-import { Text, View, StyleSheet, Switch,Picker, Button, Modal,Alert, ScrollView } from 'react-native';
+import React, { Component, useState } from 'react';
+import { Text, View, StyleSheet, Switch,Picker, Button, Modal,Alert, ScrollView, } from 'react-native';
 import { Card } from'react-native-elements';
-import DatePicker from'react-native-datepicker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import  * as Animatable from 'react-native-animatable';
-import{ Permissions, Notifications } from'expo';
+import{ Notifications } from'expo';
+import * as Permissions from 'expo-permissions';
+import * as Calendar from 'expo-calendar';
+import Moment from 'moment';
 class Reservation extends Component{
 
-    constructor(props){
+    constructor(props) {
         super(props);
-        this.state ={
+
+        this.state = {
             guests: 1,
             smoking: false,
-            date: '',
-            showModal: false
+            date: new Date(),
+            showModal: false,
+            show:false,
+            mode: 'date'
         }
+    }
+    
+    
+handleReservation() {
+        const date = this.state.date;
+        Alert.alert(JSON.stringify(this.state));
+        this.obtainCalendarPermission();
+        this.addReservationToCalendar(date);
+        this.setState({
+            guests: 1,
+            smoking: false,
+            date: new Date(),
+            showModal: false,
+            show:false,
+            mode: 'date'
+        });
     }
     static navigationOptions ={
         title: 'Reserve Table',
@@ -21,36 +43,15 @@ class Reservation extends Component{
     toggleModal(){
         this.setState({ showModal: !this.state.showModal});
     }
-    handleReservation(guests, smoking,date){
-        return(
-        Alert.alert(
-            'Your Reservation OK?',
-            'Number of Guests: ' + guests +
-            '\nSmoking? '+ smoking + 
-            '\nDate and Time:' +date,
-            [
-                {text: 'Cancel',
-                onPress: () => this.resetForm,
-                style:' cancel'
-                },
-                {
-                text:'OK',
-                onPress: () =>{
-                    this.presentLocalNotification(this.state.date);
-                    this.resetForm();
-                }
-                }
-            ]
-
-        ))
-    };
 
     resetForm() {
         this.setState({
             guests: 1,
             smoking: false,
-            date: '',
-            showModal: false
+            mode: 'date',
+            date: new Date(),
+            showModal: false,
+            show: false
         });
     }
     async obtainNotificationPermission(){
@@ -79,8 +80,66 @@ class Reservation extends Component{
             }
         });
     }
+    async obtainCalendarPermission(){
+        const calendarPermission = await Calendar.requestCalendarPermissionsAsync();
+
+    }
+    
+    async addReservationToCalendar(date){
+
+        await this.obtainCalendarPermission();
+  
+        let dateMs = Date.parse(date);
+        
+        let startDate = new Date(dateMs);
+        
+        let endDate = new Date(dateMs + 2 * 60 * 60 * 1000);
+        
+        const defaultCalendarSource =
+        
+        Platform.OS === 'ios'
+        
+        ? await getDefaultCalendarSource()
+        
+        : { isLocalAccount: true, name: 'Expo Calendar' };
+        let details ={
+            title: 'Con Fusion Table Reservation',
+  
+            source: defaultCalendarSource,
+            
+            name: 'internalCalendarName',
+            
+            color: 'blue',
+            
+            entityType: Calendar.EntityTypes.EVENT,
+            
+            sourceId: defaultCalendarSource.id,
+            
+            ownerAccount: 'personal',
+            
+            accessLevel: Calendar.CalendarAccessLevel.OWNER,
+        }
+        const calendarId = await Calendar.createCalendarAsync(details);
+
+        await Calendar.createEventAsync(calendarId , {
+
+            title: 'Con Fusion Table Reservation',
+            
+            startDate: startDate,
+            
+            endDate: endDate,
+            
+            timeZone: 'Asia/Hong_Kong',
+            
+            location: '121, Clear Water Bay Road, Clear Water Bay, Kowloon, Hong Kong'
+            
+            });
+    }
+
+            
     render(){
         return(
+
             <ScrollView>
                  <Animatable.View animation="zoomIn">
                 <View Style={styles.formRow}>
@@ -109,30 +168,30 @@ class Reservation extends Component{
                 </Switch>
                 </View>
                 <View style={styles.formRow}>
-                <Text style={styles.formLabel}>Date and Time</Text>
-                <DatePicker
-                    style={{flex: 2, marginRight: 20}}
-                    date={this.state.date}
-                    format=''
-                    mode="datetime"
-                    placeholder="select date and Time"
-                    minDate="2017-01-01"
-                    confirmBtnText="Confirm"
-                    cancelBtnText="Cancel"
-                    customStyles={{
-                    dateIcon: {
-                        position: 'absolute',
-                        left: 0,
-                        top: 4,
-                        marginLeft: 0
-                    },
-                    dateInput: {
-                        marginLeft: 36
-                    }
-                    // ... You can check the source to find the other keys. 
-                    }}
-                    onDateChange={(date) => {this.setState({date: date})}}
-                />
+                <Text style={styles.formLabel}onPress={() => this.setState({ show: true, mode: 'date' })}>Date and Time</Text>
+                {/* Date Time Picker */}
+                {this.state.show && (
+                    <DateTimePicker
+                        value={this.state.date}
+                        textcolor="blue"
+                        mode={this.state.mode}
+                        placeholder={this.state.date}
+                        minimumDate={new Date()}
+                        minuteInterval={30}
+                        onChange={(event, date) => {
+                            if (date === undefined) {
+                                this.setState({ show: false });
+                            }
+                            else {
+                                this.setState({
+                                    show: this.state.mode === "time" ? false : true,
+                                    mode: "time",
+                                    date: new Date(date)
+                                });
+                            }
+                        }}
+                    />
+                )}
                 </View>
                 <View Style={styles.formRow}>
                     <Button

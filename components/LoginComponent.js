@@ -130,6 +130,7 @@ class RegisterTab extends Component {
             imageUrl: baseUrl + 'images/logo.png'
         }
     }
+
     getImageFromCamera = async () => {
         const cameraPermission = await Permissions.askAsync(Permissions.CAMERA);
         const cameraRollPermission = await Permissions.askAsync(Permissions.CAMERA_ROLL);
@@ -140,21 +141,42 @@ class RegisterTab extends Component {
                 aspect: [4, 3],
             });
             if (!capturedImage.cancelled) {
-                this.processImage({imageUrl: capturedImage.uri });
+                console.log(capturedImage);
+                this.processImage(capturedImage.uri);
             }
         }
 
     }
-    processImage = async (imageUri) =>{
-        letprocessedImage = await ImageManipulator.manipulate(
+    getImageFromGallery = async () => {
+        
+        const cameraRollPermission = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+
+        if (cameraRollPermission.status === 'granted') {
+            let capturedImage = await ImagePicker.launchImageLibraryAsync({
+                allowsEditing: true,
+                aspect: [4, 3],
+            });
+            if (!capturedImage.cancelled) {
+                console.log(capturedImage);
+                this.processImage(capturedImage.uri);
+            }
+        }
+
+    }
+
+    processImage = async (imageUri) => {
+        let processedImage = await ImageManipulator.manipulateAsync(
             imageUri, 
             [
-                {resize: {width:400 }}
+                {resize: {width: 400}}
             ],
             {format: 'png'}
         );
-        this.setState({ imageUrl: processedImage.uri})
+        console.log(processedImage);
+        this.setState({imageUrl: processedImage.uri });
+
     }
+
     static navigationOptions = {
         title: 'Register',
         tabBarIcon: ({ tintColor }) => (
@@ -188,6 +210,10 @@ class RegisterTab extends Component {
                     <Button
                         title='Camera'
                         onPress={this.getImageFromCamera}
+                        />
+                    <Button
+                        title='Gallery'
+                        onPress={this.getImageFromGallery}
                         />
                 </View>
                 <Input
